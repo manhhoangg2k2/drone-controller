@@ -7,7 +7,7 @@ import '../../api/communicate_service.dart';
 import '../widgets/joystick_widget.dart';
 import '../widgets/switches_widget.dart';
 import '../widgets/video_player_widget.dart';
-import 'connect_screen.dart'; // THÊM DÒNG NÀY
+import 'connect_screen.dart'; // Đảm bảo dòng này đã có nếu bạn muốn nút quay lại màn hình kết nối
 
 class FlyControlScreen extends StatelessWidget {
   final String wsUrl;
@@ -87,7 +87,7 @@ class _FlyControlScreenBody extends StatelessWidget {
                       // Joystick trái
                       JoystickWidget(
                         side: 'Trái',
-                        x: state.leftStickX,
+                        x: state.leftStickX, // Vẫn hiển thị giá trị x, y thô cho debug
                         y: state.leftStickY,
                         onChanged: (details) {
                           context.read<FlyControlCubit>().updateLeftJoystick(details.x, details.y);
@@ -96,7 +96,7 @@ class _FlyControlScreenBody extends StatelessWidget {
                       // Joystick phải
                       JoystickWidget(
                         side: 'Phải',
-                        x: state.rightStickX,
+                        x: state.rightStickX, // Vẫn hiển thị giá trị x, y thô cho debug
                         y: state.rightStickY,
                         onChanged: (details) {
                           context.read<FlyControlCubit>().updateRightJoystick(details.x, details.y);
@@ -250,7 +250,7 @@ class _AngleSlider extends StatelessWidget {
                 value: state.sliderValue,
                 min: 0,
                 max: 1,
-                divisions: 18,
+                divisions: 18, // Chia 180 độ thành 18 phần, mỗi phần 10 độ
                 label: "$angle°",
                 onChanged: (val) {
                   context.read<FlyControlCubit>().updateAngleSlider(val * 180);

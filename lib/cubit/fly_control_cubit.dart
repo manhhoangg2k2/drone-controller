@@ -1,7 +1,6 @@
-// lib/cubit/fly_control_cubit.dart (Phiên bản tối ưu hóa kết hợp)
-import 'dart:convert';
-import 'dart:async';
-import 'dart:math';
+// lib/cubit/fly_control_cubit.dart
+
+import 'dart:async'; // THÊM DÒNG NÀY ĐỂ SỬ DỤNG Timer
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../api/communicate_service.dart';
@@ -9,173 +8,104 @@ import 'fly_control_state.dart';
 
 class FlyControlCubit extends Cubit<FlyControlState> {
   final CommunicationService _communicationService;
-  StreamSubscription? _pwmDataSubscription;
+  Timer? _sendTimer; // Biến Timer để quản lý debounce
+  // Đặt _sendInterval phù hợp với tần suất cập nhật mong muốn (ví dụ: 50ms = 20 lần/giây)
+  final Duration _sendInterval = const Duration(milliseconds: 50);
 
-  int _ch1Value = 1000;
-  int _ch2Value = 1500;
-  int _ch3Value = 1500;
-  int _ch4Value = 1500;
-  int _angleValue = 90;
+  FlyControlCubit(this._communicationService) : super(const FlyControlState());
 
-  // Biến cho Throttling
-  Timer? _sendTimer;
-  static const Duration _sendInterval = Duration(milliseconds: 50); // Gửi tối đa 20 lần/giây
-
-  // Biến cho kiểm tra thay đổi
-  int _lastSentCh1 = 1000;
-  int _lastSentCh2 = 1500;
-  int _lastSentCh3 = 1500;
-  int _lastSentCh4 = 1500;
-  int _lastSentCh5 = 90;
-  static const int _pwmChangeThreshold = 2; // Chỉ gửi nếu thay đổi >= 2 PWM units
-  static const int _angleChangeThreshold = 1; // Chỉ gửi nếu thay đổi >= 1 độ
-
-  FlyControlCubit(this._communicationService) : super(const FlyControlState()) {
-    _pwmDataSubscription = _communicationService.pwmDataStream.listen(
-          (data) {
-        // Xử lý phản hồi nếu cần
-      },
-      onError: (error) {
-        emit(state.copyWith(connectionStatus: ConnectionStatus.error));
-        print("CUBIT: Lỗi WebSocket từ Service: $error");
-      },
-      onDone: () {
-        emit(state.copyWith(connectionStatus: ConnectionStatus.disconnected));
-        print("CUBIT: WebSocket đã ngắt kết nối.");
-      },
-    );
-  }
-
-  int _mapJoystickAxisToPwm(double axisValue, {int center = 1500, int range = 500}) {
-    return (center + (axisValue * range)).round().clamp(1000, 2000);
-  }
-
-  // Cập nhật các giá trị kênh PWM
-  void updateLeftJoystick(double x, double y) {
-    emit(state.copyWith(leftStickX: x, leftStickY: y));
-    _ch1Value = _mapJoystickAxisToPwm(y); // Throttle
-    _ch2Value = _mapJoystickAxisToPwm(x); // Yaw
-    _schedulePwmSend(); // Chỉ lên lịch gửi, không gửi ngay lập tức
-  }
-
-  void updateRightJoystick(double x, double y) {
-    emit(state.copyWith(rightStickX: x, rightStickY: y));
-    _ch3Value = _mapJoystickAxisToPwm(y); // Pitch
-    _ch4Value = _mapJoystickAxisToPwm(x); // Roll
-    _schedulePwmSend(); // Chỉ lên lịch gửi
-  }
-
-  void updateSwitch(int index, bool value) {
-    final newSwitchValues = List<bool>.from(state.switchValues);
-    newSwitchValues[index] = value;
-    emit(state.copyWith(switchValues: newSwitchValues));
-
-    if (index == 0) {
-      if (value) {
-        _ch1Value = 1100;
-        print("CUBIT: Công tắc 1 BẬT (Set Throttle to 1100)");
-      } else {
-        _ch1Value = 1000;
-        print("CUBIT: Công tắc 1 TẮT (Set Throttle to 1000)");
-      }
-      _schedulePwmSend(); // Lên lịch gửi sau khi thay đổi công tắc
-    } else if (index == 1) {
-      print("CUBIT: Công tắc Mode ${value ? 'BẬT' : 'TẮT'}");
-      _schedulePwmSend(); // Cũng lên lịch gửi nếu công tắc mode thay đổi
-    } else if (index == 2) {
-      print("CUBIT: Công tắc Aux 1 ${value ? 'BẬT' : 'TẮT'}");
-      // Gửi thông tin về công tắc Aux 1 qua WebSocket với route /toggle
-      // Công tắc này có thể gửi riêng vì nó là một lệnh toggle, không phải PWM liên tục
-      _communicationService.sendToggleData(
-        t1: newSwitchValues[0],
-        t2: newSwitchValues[1],
-        t3: newSwitchValues[2],
-      );
-    }
-  }
-
-  void updateAngleSlider(double value) {
-    _angleValue = value.round().clamp(0, 180);
-    emit(state.copyWith(sliderValue: value / 180));
-    _schedulePwmSend(); // Chỉ lên lịch gửi
-  }
-
-  // Hàm này sẽ được gọi từ các hàm updateJoystick/Slider/Switch
-  void _schedulePwmSend() {
-    // Nếu có timer đang chạy, không làm gì cả.
-    // Nếu không, tạo một timer mới để gửi dữ liệu sau _sendInterval.
-    if (_sendTimer == null || !_sendTimer!.isActive) {
-      _sendTimer = Timer(_sendInterval, () {
-        _sendAllPwmSignals(); // Gọi hàm gửi thực tế
-        _sendTimer = null; // Reset timer để cho phép gửi lần tiếp theo
-      });
-    }
-  }
-
-  // Hàm thực sự gửi dữ liệu, bao gồm kiểm tra thay đổi
-  void _sendAllPwmSignals() {
-    final currentCh1 = _ch3Value; // Đổi mapping: ch3 -> ch1
-    final currentCh2 = _ch4Value; // ch4 -> ch2
-    final currentCh3 = _ch1Value; // ch1 -> ch3
-    final currentCh4 = _ch2Value; // ch2 -> ch4
-    final currentCh5 = _angleValue;
-
-    // Kiểm tra xem có bất kỳ giá trị nào đã thay đổi đáng kể không
-    bool shouldSend =
-        (currentCh1 - _lastSentCh1).abs() >= _pwmChangeThreshold ||
-            (currentCh2 - _lastSentCh2).abs() >= _pwmChangeThreshold ||
-            (currentCh3 - _lastSentCh3).abs() >= _pwmChangeThreshold ||
-            (currentCh4 - _lastSentCh4).abs() >= _pwmChangeThreshold ||
-            (currentCh5 - _lastSentCh5).abs() >= _angleChangeThreshold;
-
-    if (shouldSend) {
-      final dataToSend = {
-        'ch1': currentCh1,
-        'ch2': currentCh2,
-        'ch3': currentCh3,
-        'ch4': currentCh4,
-        'ch5': currentCh5,
-      };
-      final jsonString = jsonEncode(dataToSend);
-
-      emit(state.copyWith(lastSentData: jsonString));
-
-      _communicationService.sendAllPwmValues(
-        currentCh1,
-        currentCh2,
-        currentCh3,
-        currentCh4,
-        currentCh5,
-      );
-
-      // Cập nhật các giá trị đã gửi cuối cùng
-      _lastSentCh1 = currentCh1;
-      _lastSentCh2 = currentCh2;
-      _lastSentCh3 = currentCh3;
-      _lastSentCh4 = currentCh4;
-      _lastSentCh5 = currentCh5;
-    }
-  }
-
-  @override
   Future<void> connectToDevice() async {
     emit(state.copyWith(connectionStatus: ConnectionStatus.connecting));
     try {
       await _communicationService.connect();
       emit(state.copyWith(connectionStatus: ConnectionStatus.connected));
-      // Gửi trạng thái ban đầu sau khi kết nối thành công
-      _sendAllPwmSignals();
+      _sendAllCurrentPwmValuesImmediate(); // Gửi ngay giá trị ban đầu khi kết nối thành công
     } catch (e) {
-      emit(state.copyWith(connectionStatus: ConnectionStatus.error));
-      print("CUBIT: Lỗi kết nối đến thiết bị: $e");
+      emit(state.copyWith(
+        connectionStatus: ConnectionStatus.error,
+        lastSentData: "Lỗi kết nối: $e",
+      ));
     }
+  }
+
+  void updateLeftJoystick(double x, double y) {
+    const double sensitivity = 250;
+    int newCh1 = (1500 + (y * sensitivity)).round().clamp(1000, 2000);
+    int newCh2 = (1500 + (x * sensitivity)).round().clamp(1000, 2000);
+
+    emit(state.copyWith(
+      leftStickX: x,
+      leftStickY: y,
+      currentCh1: newCh1,
+      currentCh2: newCh2,
+    ));
+    _scheduleSendAllCurrentPwmValues(); // THAY THẾ BẰNG HÀM SCHEDULE ĐỂ DEBOUNCE
+  }
+
+  void updateRightJoystick(double x, double y) {
+    const double sensitivity = 250;
+    int newCh3 = (1500 + (y * sensitivity)).round().clamp(1000, 2000);
+    int newCh4 = (1500 + (x * sensitivity)).round().clamp(1000, 2000);
+
+    emit(state.copyWith(
+      rightStickX: x,
+      rightStickY: y,
+      currentCh3: newCh3,
+      currentCh4: newCh4,
+    ));
+    _scheduleSendAllCurrentPwmValues(); // THAY THẾ BẰNG HÀM SCHEDULE ĐỂ DEBOUNCE
+  }
+
+  void updateAngleSlider(num angle) {
+    emit(state.copyWith(
+      sliderValue: angle / 180.0,
+      currentCh5Angle: angle,
+    ));
+    _scheduleSendAllCurrentPwmValues(); // THAY THẾ BẰNG HÀM SCHEDULE ĐỂ DEBOUNCE
+  }
+
+  void updateSwitch(int index, bool value) {
+    final Map<int, bool> updatedSwitches = Map.from(state.switchValues);
+    updatedSwitches[index] = value;
+    emit(state.copyWith(switchValues: updatedSwitches));
+    // Đối với công tắc, thường không cần debounce vì các sự kiện là rời rạc
+    _communicationService.sendToggleData(
+      t1: updatedSwitches[0] ?? false,
+      t2: updatedSwitches[1] ?? false,
+      t3: updatedSwitches[2] ?? false,
+    );
+  }
+
+  // Hàm để gửi tất cả 5 giá trị PWM hiện tại ngay lập tức
+  void _sendAllCurrentPwmValuesImmediate() {
+    _communicationService.sendAllPwmValues(
+      state.currentCh1,
+      state.currentCh2,
+      state.currentCh3,
+      state.currentCh4,
+      state.currentCh5Angle,
+    );
+    // Cập nhật lastSentData để hiển thị trên UI, giúp debug
+    emit(state.copyWith(
+      lastSentData: "ch1:${state.currentCh1}, ch2:${state.currentCh2}, ch3:${state.currentCh3}, ch4:${state.currentCh4}, ch5_angle:${state.currentCh5Angle}",
+    ));
+  }
+
+  // Hàm lên lịch gửi dữ liệu, debounce các cuộc gọi liên tiếp
+  void _scheduleSendAllCurrentPwmValues() {
+    // Hủy timer hiện có nếu nó đang chạy để bắt đầu lại đếm ngược
+    _sendTimer?.cancel();
+    // Lên lịch gửi dữ liệu sau một khoảng thời gian
+    _sendTimer = Timer(_sendInterval, () {
+      _sendAllCurrentPwmValuesImmediate(); // Gửi dữ liệu khi timer kết thúc
+      _sendTimer = null; // Đặt lại timer sau khi gửi
+    });
   }
 
   @override
   Future<void> close() {
-    _sendTimer?.cancel(); // Hủy timer khi đóng Cubit
+    _sendTimer?.cancel(); // Hủy timer khi Cubit đóng để tránh rò rỉ bộ nhớ
     _communicationService.disconnect();
-    _pwmDataSubscription?.cancel();
     return super.close();
   }
 }

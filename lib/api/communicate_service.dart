@@ -9,7 +9,7 @@ class CommunicationService {
   CommunicationService(this._wsUrl);
 
   // Hàm chuyển đổi góc (độ) sang micro giây cho servo
-  int _angleToMicros(int angle) {
+  int _angleToMicros(num angle) {
     return ((angle / 180) * 2000 + 500).round().clamp(500, 2500); // Dải servo thông thường là 500-2500 us
   }
 
@@ -20,6 +20,11 @@ class CommunicationService {
 
   // Stream để các Widget hoặc Cubit khác có thể lắng nghe dữ liệu PWM từ ESP32
   Stream<Map<String, dynamic>> get pwmDataStream => _pwmDataStreamController.stream;
+
+  // THÊM BIẾN NÀY ĐỂ LƯU TRỮ DỮ LIỆU PWM CUỐI CÙNG ĐƯỢC GỬI
+  Map<String, dynamic>? _lastSentPwmData;
+  // THÊM BIẾN NÀY ĐỂ LƯU TRỮ DỮ LIỆU TOGGLE CUỐI CÙNG ĐƯỢC GỬI
+  Map<String, dynamic>? _lastSentToggleData;
 
   /// Kết nối tới các WebSocket server trên ESP32
   Future<void> connect() async {
@@ -77,7 +82,7 @@ class CommunicationService {
       return;
     }
 
-    final currentCh5 = _angleToMicros(angle.toInt()); // Chuyển đổi góc sang micro giây
+    final currentCh5 = _angleToMicros(angle); // Chuyển đổi góc sang micro giây
 
     final Map<String, dynamic> dataToSend = {
       'ch1': ch1,
@@ -86,6 +91,14 @@ class CommunicationService {
       'ch4': ch4,
       'ch5': currentCh5,
     };
+
+    // KIỂM TRA TRÙNG LẶP DỮ LIỆU TRƯỚC KHI GỬI
+    if (_lastSentPwmData != null && _areMapsEqual(_lastSentPwmData!, dataToSend)) {
+      // print("SERVICE: Dữ liệu PWM trùng lặp, bỏ qua gửi.");
+      return;
+    }
+
+    _lastSentPwmData = dataToSend; // Cập nhật dữ liệu cuối cùng đã gửi
     _sendDataViaWebSocket(_pwmChannel!, dataToSend, "/ws"); // Sử dụng kênh PWM
   }
 
@@ -98,10 +111,18 @@ class CommunicationService {
     }
 
     final Map<String, dynamic> toggleData = {
-      't1': t1 ? 1 : 0, // Chuyển boolean sang 1 hoặc 0
-      't2': t2 ? 1 : 0,
-      't3': t3 ? 1 : 0,
+      't1': t1, // Gửi trực tiếp giá trị boolean (true/false)
+      't2': t2, // Gửi trực tiếp giá trị boolean (true/false)
+      't3': t3, // Gửi trực tiếp giá trị boolean (true/false)
     };
+
+    // KIỂM TRA TRÙNG LẶP DỮ LIỆU TRƯỚC KHI GỬI
+    if (_lastSentToggleData != null && _areMapsEqual(_lastSentToggleData!, toggleData)) {
+      // print("SERVICE: Dữ liệu Toggle trùng lặp, bỏ qua gửi.");
+      return;
+    }
+
+    _lastSentToggleData = toggleData; // Cập nhật dữ liệu cuối cùng đã gửi
     // Gửi qua kênh _toggleChannel riêng biệt
     _sendDataViaWebSocket(_toggleChannel!, toggleData, "/toggle");
   }
@@ -111,6 +132,19 @@ class CommunicationService {
     final jsonString = jsonEncode(data);
     print("SERVICE: Gửi qua WebSocket $endpoint: $jsonString");
     channel.sink.add(jsonString);
+  }
+
+  /// Hàm tiện ích để so sánh hai Map
+  bool _areMapsEqual(Map<String, dynamic> map1, Map<String, dynamic> map2) {
+    if (map1.length != map2.length) {
+      return false;
+    }
+    for (final key in map1.keys) {
+      if (!map2.containsKey(key) || map1[key] != map2[key]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// Đóng tất cả các kết nối WebSocket
@@ -129,8 +163,6 @@ class CommunicationService {
   }
 
   // ----- CÁC HÀM KHÔNG CÒN ĐƯỢC SỬ DỤNG HOẶC ĐÃ ĐƯỢC CHUYỂN LOGIC -----
-  // Bạn có thể xóa hẳn các hàm này hoặc giữ lại nếu muốn tham khảo
-
   void sendJoystickData(String side, double x, double y) {
     print("SERVICE: sendJoystickData không còn được sử dụng trực tiếp. Logic đã chuyển sang Cubit.");
   }

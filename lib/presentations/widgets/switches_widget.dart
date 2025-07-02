@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class SwitchesWidget extends StatelessWidget {
-  final List<bool> switchValues;
+  final Map<int, bool> switchValues; // ĐÃ THAY ĐỔI TỪ List<bool> SANG Map<int, bool>
   final Function(int index, bool value) onSwitchChanged;
 
   const SwitchesWidget({
@@ -23,9 +23,10 @@ class SwitchesWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween, // Đẩy text và switch ra hai bên
           children: [
-            Text("Arm", style: TextStyle(color: Colors.white, fontSize: 12)),
+            const Text("Arm", style: TextStyle(color: Colors.white, fontSize: 12)),
             Switch(
-              value: switchValues.isNotEmpty ? switchValues[0] : false,
+              // Sử dụng toán tử null-aware (??) để cung cấp giá trị mặc định nếu key không tồn tại
+              value: switchValues[0] ?? false,
               onChanged: (val) => onSwitchChanged(0, val),
               activeColor: Colors.green,
               inactiveThumbColor: Colors.red,
@@ -37,9 +38,9 @@ class SwitchesWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Mode", style: TextStyle(color: Colors.white, fontSize: 12)),
+            const Text("Mode", style: TextStyle(color: Colors.white, fontSize: 12)),
             Switch(
-              value: switchValues.length > 1 ? switchValues[1] : false,
+              value: switchValues[1] ?? false,
               onChanged: (val) => onSwitchChanged(1, val),
               activeColor: Colors.blue,
               inactiveThumbColor: Colors.grey,
@@ -51,9 +52,9 @@ class SwitchesWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Aux 1", style: TextStyle(color: Colors.white, fontSize: 12)),
+            const Text("Aux 1", style: TextStyle(color: Colors.white, fontSize: 12)),
             Switch(
-              value: switchValues.length > 2 ? switchValues[2] : false,
+              value: switchValues[2] ?? false,
               onChanged: (val) => onSwitchChanged(2, val),
               activeColor: Colors.purple,
               inactiveThumbColor: Colors.grey,

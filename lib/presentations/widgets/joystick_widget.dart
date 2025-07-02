@@ -1,3 +1,4 @@
+// lib/presentations/widgets/joystick_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
 
@@ -18,27 +19,22 @@ class JoystickWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.end, // Căn joystick xuống dưới
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        // Text(side, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)), // Có thể thêm lại để debug
-        // const SizedBox(height: 10),
         Joystick(
-          mode: JoystickMode.all, // Cho phép di chuyển theo mọi hướng
-          listener: onChanged, // Gửi chi tiết di chuyển lên Cubit
+          mode: JoystickMode.all,
+          listener: onChanged,
           base: Container(
-            width: 120,
-            height: 120,
+            width: 150, // TĂNG KÍCH THƯỚC: Ví dụ từ 120 lên 180
+            height: 150, // TĂNG KÍCH THƯỚC: Ví dụ từ 120 lên 180
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.black.withOpacity(0.5),
                 border: Border.all(color: Colors.lightBlue, width: 2)),
           ),
-          // stick: const Icon(Icons.gamepad, size: 60, color: Colors.lightBlueAccent), // Có thể thêm lại stick nếu muốn
+          // Bạn có thể thêm lại stick nếu muốn một hình ảnh/icon cho tay cầm
+          // stick: const Icon(Icons.gamepad, size: 80, color: Colors.lightBlueAccent), // Kích thước icon cũng sẽ lớn hơn
         ),
-        // Để debug, bạn có thể uncomment các dòng này để thấy giá trị X, Y
-        // const SizedBox(height: 10),
-        // Text("X: ${x.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white)),
-        // Text("Y: ${y.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white)),
       ],
     );
   }
