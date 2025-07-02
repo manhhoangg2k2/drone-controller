@@ -35,6 +35,15 @@ class JoystickWidget extends StatelessWidget {
           // Bạn có thể thêm lại stick nếu muốn một hình ảnh/icon cho tay cầm
           // stick: const Icon(Icons.gamepad, size: 80, color: Colors.lightBlueAccent), // Kích thước icon cũng sẽ lớn hơn
         ),
+        const SizedBox(height: 8), // Khoảng cách giữa joystick và text
+        Text(
+          side,
+          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          'X: ${x.toStringAsFixed(2)}, Y: ${y.toStringAsFixed(2)}',
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
+        ),
       ],
     );
   }

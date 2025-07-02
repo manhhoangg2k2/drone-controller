@@ -75,7 +75,7 @@ class CommunicationService {
   }
 
   /// Phương thức mới để gửi tất cả 4 giá trị PWM cùng lúc
-  void sendAllPwmValues(int ch1, int ch2, int ch3, int ch4, num angle) {
+  Future<void> sendAllPwmValues(int ch1, int ch2, int ch3, int ch4, num angle) async {
     // Kiểm tra xem kênh PWM có đang kết nối không
     if (_pwmChannel == null || _pwmChannel!.closeCode != null) {
       print("SERVICE: WebSocket PWM chưa kết nối. Không thể gửi dữ liệu PWM.");

@@ -13,6 +13,7 @@ class FlyControlState extends Equatable {
   final double sliderValue; // 0.0 - 1.0 (cho UI Slider)
   final Map<int, bool> switchValues; // ĐÃ THAY ĐỔI TỪ List<bool> SANG Map<int, bool>
   final String lastSentData;
+  final bool isWsConnected; // Trạng thái kết nối WebSocket
 
   // CÁC TRƯỜNG ĐỂ LƯU TRỮ GIÁ TRỊ PWM HIỆN TẠI CỦA CÁC KÊNH
   final int currentCh1; // Throttle
@@ -30,6 +31,7 @@ class FlyControlState extends Equatable {
     this.sliderValue = 0.5, // Mặc định 90 độ cho servo (0.5 * 180)
     this.switchValues = const {0: false, 1: false, 2: false}, // Khởi tạo 3 công tắc
     this.lastSentData = "",
+    this.isWsConnected = false, // Mặc định là false
     // KHỞI TẠO GIÁ TRỊ MẶC ĐỊNH CHO CÁC KÊNH PWM
     this.currentCh1 = 1500,
     this.currentCh2 = 1500,
@@ -47,6 +49,7 @@ class FlyControlState extends Equatable {
     double? sliderValue,
     Map<int, bool>? switchValues, // ĐÃ THAY ĐỔI TỪ List<bool> SANG Map<int, bool>
     String? lastSentData,
+    bool? isWsConnected, // Cập nhật trạng thái WS
     // Cập nhật các trường kênh PWM
     int? currentCh1,
     int? currentCh2,
@@ -63,6 +66,7 @@ class FlyControlState extends Equatable {
       sliderValue: sliderValue ?? this.sliderValue,
       switchValues: switchValues ?? this.switchValues,
       lastSentData: lastSentData ?? this.lastSentData,
+      isWsConnected: isWsConnected ?? this.isWsConnected, // Gán giá trị
       // Cập nhật các giá trị kênh
       currentCh1: currentCh1 ?? this.currentCh1,
       currentCh2: currentCh2 ?? this.currentCh2,
@@ -82,6 +86,7 @@ class FlyControlState extends Equatable {
     sliderValue,
     switchValues,
     lastSentData,
+    isWsConnected, // Thêm vào props
     // Thêm các trường vào props
     currentCh1,
     currentCh2,

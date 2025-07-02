@@ -22,7 +22,7 @@ class FlyControlScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => FlyControlCubit(CommunicationService(wsUrl))..connectToDevice(),
+      create: (_) => FlyControlCubit(CommunicationService(wsUrl), wsUrl)..connectToDevice(), // Truyền wsUrl vào Cubit
       child: _FlyControlScreenBody(camIp: camIp),
     );
   }
@@ -65,12 +65,16 @@ class _FlyControlScreenBody extends StatelessWidget {
                 Positioned(
                   top: 16,
                   right: 16,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end, // Căn chỉnh sang phải
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start, // Căn chỉnh sang phải
                     children: [
-                      _StatusAndControls(), // Chứa trạng thái và các công tắc
-                      const SizedBox(height: 10),
                       _SettingsButton(), // Nút cài đặt
+                      const SizedBox(width: 10),
+
+                      _WsToggleButton(), // Nút bật/tắt WS connection
+                      const SizedBox(width: 10),
+
+                      _StatusAndControls(), // Chứa trạng thái và các công tắc
                     ],
                   ),
                 ),
@@ -86,7 +90,7 @@ class _FlyControlScreenBody extends StatelessWidget {
                     children: [
                       // Joystick trái
                       JoystickWidget(
-                        side: 'Trái',
+                        side: 'Trái (Pitch/Roll)', // Cập nhật nhãn
                         x: state.leftStickX, // Vẫn hiển thị giá trị x, y thô cho debug
                         y: state.leftStickY,
                         onChanged: (details) {
@@ -95,7 +99,7 @@ class _FlyControlScreenBody extends StatelessWidget {
                       ),
                       // Joystick phải
                       JoystickWidget(
-                        side: 'Phải',
+                        side: 'Phải (Throttle/Yaw)', // Cập nhật nhãn
                         x: state.rightStickX, // Vẫn hiển thị giá trị x, y thô cho debug
                         y: state.rightStickY,
                         onChanged: (details) {
@@ -265,6 +269,64 @@ class _AngleSlider extends StatelessWidget {
     );
   }
 }
+
+// Widget mới cho nút bật/tắt kết nối WebSocket
+class _WsToggleButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FlyControlCubit, FlyControlState>(
+      builder: (context, state) {
+        final bool isConnected = state.isWsConnected;
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF2D2A4F).withOpacity(0.8),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.lightBlue.withOpacity(0.5), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                context.read<FlyControlCubit>().toggleWsConnection(!isConnected);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isConnected ? Icons.link_off : Icons.link,
+                      color: isConnected ? Colors.redAccent : Colors.greenAccent,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isConnected ? "Ngắt WS" : "Kết nối WS",
+                      style: TextStyle(
+                        color: isConnected ? Colors.redAccent : Colors.greenAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 
 // Widget mới cho nút cài đặt
 class _SettingsButton extends StatelessWidget {
