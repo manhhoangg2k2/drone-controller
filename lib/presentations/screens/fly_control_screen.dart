@@ -61,6 +61,12 @@ class _FlyControlScreenBody extends StatelessWidget {
                   child: _AngleSlider(),
                 ),
 
+                Positioned(
+                  top: 80,
+                  left: 16,
+                  child: _Angle6Slider(),
+                ),
+
                 // KHỐI ĐIỀU KHIỂN BÊN PHẢI (TRẠNG THÁI, CÔNG TẮC, CÀI ĐẶT)
                 Positioned(
                   top: 16,
@@ -224,7 +230,7 @@ class _AngleSlider extends StatelessWidget {
         final angle = (state.sliderValue * 180).round();
         return Container(
           width: 180, // Giới hạn chiều rộng cho Slider
-          padding: const EdgeInsets.all(8), // Giảm padding
+          // padding: const EdgeInsets.all(8), // Giảm padding
           decoration: BoxDecoration(
             color: const Color(0xFF2D2A4F).withOpacity(0.8), // Màu nền đậm hơn
             borderRadius: BorderRadius.circular(12),
@@ -241,15 +247,6 @@ class _AngleSlider extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start, // Căn chỉnh tiêu đề sang trái
             children: [
-              const Text(
-                "Điều khiển camera",
-                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold), // Giảm kích thước chữ
-              ),
-              const SizedBox(height: 6), // Giảm khoảng cách
-              Text(
-                "Góc: $angle°",
-                style: const TextStyle(color: Colors.white70, fontSize: 10), // Giảm kích thước chữ
-              ),
               Slider(
                 value: state.sliderValue,
                 min: 0,
@@ -258,6 +255,51 @@ class _AngleSlider extends StatelessWidget {
                 label: "$angle°",
                 onChanged: (val) {
                   context.read<FlyControlCubit>().updateAngleSlider(val * 180);
+                },
+                activeColor: Colors.orangeAccent, // Màu cam sáng hơn
+                inactiveColor: Colors.orangeAccent.withOpacity(0.3),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Angle6Slider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FlyControlCubit, FlyControlState>(
+      builder: (context, state) {
+        final angle = (state.sliderValue2 * 180).round();
+        return Container(
+          width: 180, // Giới hạn chiều rộng cho Slider
+          // padding: const EdgeInsets.all(8), // Giảm padding
+          decoration: BoxDecoration(
+            color: const Color(0xFF2D2A4F).withOpacity(0.8), // Màu nền đậm hơn
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.lightBlue.withOpacity(0.5), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, // Căn chỉnh tiêu đề sang trái
+            children: [
+              Slider(
+                value: state.sliderValue2,
+                min: 0,
+                max: 1,
+                divisions: 18, // Chia 180 độ thành 18 phần, mỗi phần 10 độ
+                label: "$angle°",
+                onChanged: (val) {
+                  context.read<FlyControlCubit>().updateAngle6Slider(val * 180);
                 },
                 activeColor: Colors.orangeAccent, // Màu cam sáng hơn
                 inactiveColor: Colors.orangeAccent.withOpacity(0.3),

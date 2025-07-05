@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class SwitchesWidget extends StatelessWidget {
-  final Map<int, bool> switchValues; // ĐÃ THAY ĐỔI TỪ List<bool> SANG Map<int, bool>
+  final Map<int, bool> switchValues;
   final Function(int index, bool value) onSwitchChanged;
 
   const SwitchesWidget({
@@ -23,9 +23,7 @@ class SwitchesWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween, // Đẩy text và switch ra hai bên
           children: [
-            const Text("Arm", style: TextStyle(color: Colors.white, fontSize: 12)),
             Switch(
-              // Sử dụng toán tử null-aware (??) để cung cấp giá trị mặc định nếu key không tồn tại
               value: switchValues[0] ?? false,
               onChanged: (val) => onSwitchChanged(0, val),
               activeColor: Colors.green,
@@ -38,7 +36,6 @@ class SwitchesWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text("Mode", style: TextStyle(color: Colors.white, fontSize: 12)),
             Switch(
               value: switchValues[1] ?? false,
               onChanged: (val) => onSwitchChanged(1, val),
@@ -52,11 +49,22 @@ class SwitchesWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text("Aux 1", style: TextStyle(color: Colors.white, fontSize: 12)),
             Switch(
               value: switchValues[2] ?? false,
               onChanged: (val) => onSwitchChanged(2, val),
               activeColor: Colors.purple,
+              inactiveThumbColor: Colors.grey,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Switch(
+              value: switchValues[3] ?? false,
+              onChanged: (val) => onSwitchChanged(3, val),
+              activeColor: Colors.blueGrey,
               inactiveThumbColor: Colors.grey,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),

@@ -75,7 +75,7 @@ class CommunicationService {
   }
 
   /// Phương thức mới để gửi tất cả 4 giá trị PWM cùng lúc
-  Future<void> sendAllPwmValues(int ch1, int ch2, int ch3, int ch4, num angle) async {
+  Future<void> sendAllPwmValues(int ch1, int ch2, int ch3, int ch4, num angle, num angle2) async {
     // Kiểm tra xem kênh PWM có đang kết nối không
     if (_pwmChannel == null || _pwmChannel!.closeCode != null) {
       print("SERVICE: WebSocket PWM chưa kết nối. Không thể gửi dữ liệu PWM.");
@@ -83,6 +83,7 @@ class CommunicationService {
     }
 
     final currentCh5 = _angleToMicros(angle); // Chuyển đổi góc sang micro giây
+    final currentCh6 = _angleToMicros(angle2); // Chuyển đổi góc sang micro giây
 
     final Map<String, dynamic> dataToSend = {
       'ch1': ch1,
@@ -90,6 +91,7 @@ class CommunicationService {
       'ch3': ch3,
       'ch4': ch4,
       'ch5': currentCh5,
+      'ch6': currentCh6,
     };
 
     // KIỂM TRA TRÙNG LẶP DỮ LIỆU TRƯỚC KHI GỬI
@@ -103,7 +105,7 @@ class CommunicationService {
   }
 
   // Phương thức mới để gửi dữ liệu công tắc qua kênh riêng /toggle
-  void sendToggleData({required bool t1, required bool t2, required bool t3}) {
+  void sendToggleData({required bool t1, required bool t2, required bool t3, required bool t4}) {
     // Kiểm tra xem kênh toggle có đang kết nối không
     if (_toggleChannel == null || _toggleChannel!.closeCode != null) {
       print("SERVICE: WebSocket TOGGLE chưa kết nối. Không thể gửi dữ liệu công tắc.");
@@ -114,6 +116,7 @@ class CommunicationService {
       't1': t1, // Gửi trực tiếp giá trị boolean (true/false)
       't2': t2, // Gửi trực tiếp giá trị boolean (true/false)
       't3': t3, // Gửi trực tiếp giá trị boolean (true/false)
+      't4': t4, // Gửi trực tiếp giá trị boolean (true/false)
     };
 
     // KIỂM TRA TRÙNG LẶP DỮ LIỆU TRƯỚC KHI GỬI

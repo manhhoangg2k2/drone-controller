@@ -11,6 +11,7 @@ class FlyControlState extends Equatable {
   final double rightStickX;
   final double rightStickY;
   final double sliderValue; // 0.0 - 1.0 (cho UI Slider)
+  final double sliderValue2; // 0.0 - 1.0 (cho UI Slider)
   final Map<int, bool> switchValues; // ĐÃ THAY ĐỔI TỪ List<bool> SANG Map<int, bool>
   final String lastSentData;
   final bool isWsConnected; // Trạng thái kết nối WebSocket
@@ -21,6 +22,7 @@ class FlyControlState extends Equatable {
   final int currentCh3; // Pitch
   final int currentCh4; // Roll
   final num currentCh5Angle; // Góc servo (0-180)
+  final num currentCh6Angle; // Góc servo (0-180)
 
   const FlyControlState({
     this.connectionStatus = ConnectionStatus.initial,
@@ -29,6 +31,7 @@ class FlyControlState extends Equatable {
     this.rightStickX = 0.0,
     this.rightStickY = 0.0,
     this.sliderValue = 0.5, // Mặc định 90 độ cho servo (0.5 * 180)
+    this.sliderValue2 = 0.5, // Mặc định 90 độ cho servo (0.5 * 180)
     this.switchValues = const {0: false, 1: false, 2: false}, // Khởi tạo 3 công tắc
     this.lastSentData = "",
     this.isWsConnected = false, // Mặc định là false
@@ -38,6 +41,7 @@ class FlyControlState extends Equatable {
     this.currentCh3 = 1500,
     this.currentCh4 = 1500,
     this.currentCh5Angle = 90, // Mặc định 90 độ
+    this.currentCh6Angle = 90, // Mặc định 90 độ
   });
 
   FlyControlState copyWith({
@@ -47,6 +51,7 @@ class FlyControlState extends Equatable {
     double? rightStickX,
     double? rightStickY,
     double? sliderValue,
+    double? sliderValue2,
     Map<int, bool>? switchValues, // ĐÃ THAY ĐỔI TỪ List<bool> SANG Map<int, bool>
     String? lastSentData,
     bool? isWsConnected, // Cập nhật trạng thái WS
@@ -56,6 +61,7 @@ class FlyControlState extends Equatable {
     int? currentCh3,
     int? currentCh4,
     num? currentCh5Angle,
+    num? currentCh6Angle,
   }) {
     return FlyControlState(
       connectionStatus: connectionStatus ?? this.connectionStatus,
@@ -64,6 +70,7 @@ class FlyControlState extends Equatable {
       rightStickX: rightStickX ?? this.rightStickX,
       rightStickY: rightStickY ?? this.rightStickY,
       sliderValue: sliderValue ?? this.sliderValue,
+      sliderValue2: sliderValue2 ?? this.sliderValue2,
       switchValues: switchValues ?? this.switchValues,
       lastSentData: lastSentData ?? this.lastSentData,
       isWsConnected: isWsConnected ?? this.isWsConnected, // Gán giá trị
@@ -73,6 +80,7 @@ class FlyControlState extends Equatable {
       currentCh3: currentCh3 ?? this.currentCh3,
       currentCh4: currentCh4 ?? this.currentCh4,
       currentCh5Angle: currentCh5Angle ?? this.currentCh5Angle,
+      currentCh6Angle: currentCh6Angle ?? this.currentCh6Angle,
     );
   }
 
@@ -84,6 +92,7 @@ class FlyControlState extends Equatable {
     rightStickX,
     rightStickY,
     sliderValue,
+    sliderValue2,
     switchValues,
     lastSentData,
     isWsConnected, // Thêm vào props
@@ -93,5 +102,6 @@ class FlyControlState extends Equatable {
     currentCh3,
     currentCh4,
     currentCh5Angle,
+    currentCh6Angle,
   ];
 }

@@ -25,8 +25,8 @@ class JoystickWidget extends StatelessWidget {
           mode: JoystickMode.all,
           listener: onChanged,
           base: Container(
-            width: 150, // TĂNG KÍCH THƯỚC: Ví dụ từ 120 lên 180
-            height: 150, // TĂNG KÍCH THƯỚC: Ví dụ từ 120 lên 180
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.black.withOpacity(0.5),
